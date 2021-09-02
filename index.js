@@ -8,20 +8,62 @@ const data = require('./data');
 const MONGODB_URI = 'mongodb://localhost:27017/recipe-app';
 
 // Connection to the database "recipe-app"
-mongoose
-  .connect(MONGODB_URI, {
+async function connectToDB(){ 
+
+await mongoose.connect(MONGODB_URI, {
     useCreateIndex: true,
     useNewUrlParser: true,
-    useUnifiedTopology: true
+    useUnifiedTopology: true,
+    useFindAndModify: false,
   })
-  .then(self => {
-    console.log(`Connected to the database: "${self.connection.name}"`);
-    // Before adding any recipes to the database, let's remove all existing ones
-    return Recipe.deleteMany()
-  })
-  .then(() => {
-    // Run your code here, after you have insured that the connection was made
-  })
-  .catch(error => {
-    console.error('Error connecting to the database', error);
+  
+  updateDatabase();
+
+};
+
+async function updateDatabase() {
+    try{
+  console.log("Connected to the database");
+  await Recipe.deleteMany()
+  
+  const firstRecipe = await Recipe.create(
+  {
+    title: "Scrambled eggs",
+    level: "Easy Peasy",
+    ingredients: ["eggs", "oil", "salt"],
+    cuisine: "worldwide",
+    disType:"breakfast",
+    image: "https://images.media-allrecipes.com/images/75131.jpg",
+    duration: 5,
+    creator: "unkown",
+    
+
   });
+
+  console.log(firstRecipe.title);
+await Recipe.insertMany(data, function(error, docs){});
+data.forEach(element => {
+  console.log(element.title);
+})
+
+await Recipe.findOneAndUpdate (
+  { title: "Rigatoni alla Genovese",
+    duration: 100 }
+);
+console.log("success");
+
+await Recipe.findOneAndDelete (
+  {
+    title: "Carrot Cake"
+  }
+)
+
+} catch(e) {    
+  console.log('Error connecting to the database', e);
+  } 
+  finally {
+    mongoose.connection.close();
+  }
+};
+
+connectToDB();
